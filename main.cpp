@@ -2,6 +2,8 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <unistd.h>
+#include <string.h>
 #include "rule.hpp"
 #include "utils.hpp"
 #include "config.hpp"
@@ -209,7 +211,11 @@ long getTwoItemRule_seg(rule_set &rs, events_t::iterator begin, events_t::iterat
 	//dump(rs);	
 	return nr_rules_restored;
 }
-
+void show_usage(const char *s)
+{
+	cerr<<"usage: "<<s<<" -t trace_file [-r rule_map_file]"<<endl;
+	exit(-1);
+}
 int main(int argc ,char *argv[]) 
 {
 	rule_set rs;
@@ -217,9 +223,27 @@ int main(int argc ,char *argv[])
 	long left,saved=0;
 	events_t::iterator begin, end;
 	SW_MARK(start);
-	load_data(argv[1],events);
-	if (argc > 2 && argv[2] != NULL)
-		CONFIG(abs_min_supp) = atoi(argv[2]);
+	char *trace_file=NULL;
+	int opt;
+	while((opt= getopt(argc,argv, "r:t:")) != -1) {
+		switch (opt) {
+			case 'r':
+				CONFIG(rule_map) = string(optarg);
+				break;
+			case 't':
+				trace_file = (char *)malloc(sizeof(char)*32);
+				strncpy(trace_file, optarg, 32);
+				break;
+			case '?':
+				show_usage(argv[0]);
+				break;
+		}
+	}
+	if (trace_file==NULL){
+		cerr<<"not specify trace file"<<endl;
+		show_usage(argv[0]);
+	}
+	load_data(trace_file,events);
 	{
 		fstream fout("/tmp/rule_name",ios::out);
 		fout<<CONFIG(rule_map)<<endl;
