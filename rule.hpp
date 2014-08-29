@@ -156,7 +156,9 @@ public:
 	void load_lookup() {
 		for(auto it = seq_map.begin(); it!=seq_map.end(); it++) 
 			for(auto ait = it->first.begin(); ait!=it->first.end(); ait++) 
-				secc_to_ante.insert(std::pair<bnr_t, bnr_t>(it->second.front(),*ait));
+				for (auto sit = it->second.begin(); sit!=it->second.end(); sit++)
+					secc_to_ante.insert(std::pair<bnr_t, bnr_t>(*sit, *ait));
+		seq_map.clear();
 	}
 	
 	bool lookup_ante( bnr_t secc, bnr_t ante) {
