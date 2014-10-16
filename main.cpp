@@ -11,8 +11,9 @@
 using namespace std;
 config *config::instance = NULL;
 events_t	events;
-float conf_vec[] = {0.4f, 0.5f, 0.6f, 0.7f, 0.8f};
+float conf_vec[] = {0.3f, 0.4f, 0.6f, 0.7f, 0.8f};
 rule_map *lookup;
+extern string config_file;
 //float conf_vec[] = {0.2f,0.3f,0.4f,0.5f,0.6f};
 /* 参数occ记录了伴随当前rule的前件序列在event list出现的位置
  * 它用来计算conf,以及用来在生成新前件序列时候生成新的occ用于
@@ -213,26 +214,29 @@ long getTwoItemRule_seg(rule_set &rs, events_t::iterator begin, events_t::iterat
 }
 void show_usage(const char *s)
 {
-	cerr<<"usage: "<<s<<" -t trace_file [-r rule_map_file]"<<endl;
+	cerr<<"usage: "<<s<<" -t trace_file [-r rule_map_file -f config_file]"<<endl;
 	exit(-1);
 }
 int main(int argc ,char *argv[]) 
 {
 	rule_set rs;
-	config theconfig;
 	long left,saved=0;
 	events_t::iterator begin, end;
 	SW_MARK(start);
-	char *trace_file=NULL;
+	char *trace_file=NULL, *rule_map_file=NULL;
 	int opt;
-	while((opt= getopt(argc,argv, "r:t:")) != -1) {
+	while((opt= getopt(argc,argv, "r:t:f:")) != -1) {
 		switch (opt) {
 			case 'r':
-				CONFIG(rule_map) = string(optarg);
+				rule_map_file = (char *)malloc(sizeof(char)*256);
+				strncpy(rule_map_file, optarg, 256);
 				break;
 			case 't':
-				trace_file = (char *)malloc(sizeof(char)*32);
-				strncpy(trace_file, optarg, 32);
+				trace_file = (char *)malloc(sizeof(char)*256);
+				strncpy(trace_file, optarg, 256);
+				break;
+			case 'f':
+				config_file = string(optarg);
 				break;
 			case '?':
 				show_usage(argv[0]);
@@ -243,6 +247,10 @@ int main(int argc ,char *argv[])
 		cerr<<"not specify trace file"<<endl;
 		show_usage(argv[0]);
 	}
+	config myconfig;
+	if (rule_map_file!=NULL) 
+		CONFIG(rule_map) = string(rule_map_file);
+
 	load_data(trace_file,events);
 	{
 		fstream fout("/tmp/rule_name",ios::out);

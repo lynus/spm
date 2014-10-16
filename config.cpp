@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cstring>
 using namespace std;
+string config_file;
 static string  trim(const string &s) 
 {
 	string r;
@@ -23,8 +24,9 @@ static string  trim(const string &s)
 	char buf[256],t[32];
 	int pos;
 	instance = this;
-	string fname = "config.ini";
-	ifstream fconfig(fname.c_str());
+	if (config_file.size() == 0)
+		config_file = string("config.ini");
+	ifstream fconfig(config_file.c_str());
 	if (!fconfig.is_open())
 		goto nofile;
 	while(!fconfig.eof()) {

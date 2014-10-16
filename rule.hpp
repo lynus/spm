@@ -5,6 +5,10 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/map.hpp>
 #include <fstream>
+#include <set>
+#include <list>
+#include <vector>
+#include <map>
 typedef unsigned int bnr_t;
 typedef std::list<bnr_t> seq;
 typedef int event_indx;
@@ -136,13 +140,25 @@ public:
 		}while (rs.next_rule(it) != -1);
 	};
 	rule_map():nr_origin_rules(0) {};
+	rule_map(const char* fname):rule_map() {
+		load(fname);
+	}
 	friend class boost::serialization::access;
 	template<typename Archive>
 	void serialize(Archive &ar, const unsigned int version) {
 		ar & seq_map;
 		ar & nr_origin_rules;
 	}
-
+	
+	void operator += (rule_map &rm) {
+		nr_origin_rules+= rm.nr_origin_rules;
+		auto it = rm.seq_map.begin();
+		for(;it != rm.seq_map.end(); it++) {
+			it->second.sort();
+			seq_map[it->first].sort();
+			seq_map[it->first].merge(it->second);
+		}
+	}
 	void save(const char *fname) { 
 		std::ofstream ofs(fname);
 		boost::archive::text_oarchive oa(ofs);
@@ -175,7 +191,7 @@ public:
 
 	void dump(bool detail = true) {
 		if (detail) {
-			std::cout<<"==============\nstart prefectch map\n===============\n";
+			std::cout<<"==============\nprefectch map dump\n===============\n";
 			for (auto it = seq_map.begin();it != seq_map.end(); it++) {
 				for (auto ait = it->first.begin(); ait != it->first.end();ait++)
 					std::cout<< *ait<<' ';
@@ -187,6 +203,7 @@ public:
 		}
 		std::cout<<"nr of prefetch map "<<seq_map.size()<<std::endl;
 	}
+	inline size_t get_nr_rule() {return seq_map.size();}
 protected:
 	std::map<seq, seq> seq_map;
 	std::multimap<bnr_t, bnr_t> secc_to_ante;
